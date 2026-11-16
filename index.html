@@ -26,6 +26,7 @@
 
 
 
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -244,6 +245,10 @@ textarea.search{resize:vertical;font:inherit;min-height:120px}
 svg.i{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}.ib .i{width:19px;height:19px}.lk{width:.9em;height:.9em;opacity:.7}.chip .i,.opt .i{margin-right:2px}.tag .i,.qnote .i{width:1em;height:1em}
 nav.main a[data-k="unlock"]{color:var(--green);font-weight:600}
 .e{font-style:normal;line-height:1}.lk{font-size:.85em;opacity:.8}
+.buybig{width:100%;margin-top:14px;padding:14px 20px;font-size:16px}
+.fine{color:var(--muted);font-size:13.5px;margin:10px 0 0}
+.buysteps{margin:16px 0 0;padding-left:20px;font-size:14.5px;color:var(--muted)}.buysteps li{margin:6px 0}.buysteps b{color:var(--ink)}
+.paidnote{background:var(--okbg);border-radius:12px;padding:14px 16px;margin:0 0 14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -690,7 +695,7 @@ const SHOP={checkout:'https://magyarkulturalis.lemonsqueezy.com/checkout/buy/3ca
 const FEEDBACK={email:'CHANGE-ME@example.com',endpoint:''};
 const COFFEE='https://buymeacoffee.com/CHANGE-ME';   // Buy Me a Coffee page (voluntary support)
 const coffeeReady=()=>!/CHANGE-ME/.test(COFFEE);
-function coffeeBtn(cls){return `<a class="btn bmc ${cls||''}" href="${coffeeReady()?COFFEE:'#feedback'}" ${coffeeReady()?'target="_blank" rel="noopener"':''}>${IC('cup')} ${tx('Hívj meg egy kávéra vagy csokira','Buy me a coffee or a chocolate','Bana bir kahve ya da çikolata ısmarla')}</a>`}
+function coffeeBtn(cls){return `<button type="button" class="btn bmc ${cls||''}" data-buy>${IC('cup')} ${tx('Hívj meg egy kávéra vagy csokira','Buy me a coffee or a chocolate','Bana bir kahve ya da çikolata ısmarla')} · ${SHOP.price}</button>`}
 function coffeeBox(){return `<section><div class="coffee"><div class="cups"><div class="cup">${IC('cup')}</div><div class="cup choc">${IC('choco')}</div></div><div><h2 class="sh" style="font-size:20px">${tx('Hasznos volt?','Found it useful?','Faydalı buldun mu?')}</h2>
   <p class="ss" style="margin:0 0 14px">${tx('Az ingyenes rész mindenkinek ingyenes marad. Ha segített a felkészülésben, egy kávéval vagy egy csokival támogathatod az oldal fejlesztését.','The free part stays free for everyone. If it helped you prepare, you can support the site with a coffee or a chocolate.','Ücretsiz bölüm herkes için ücretsiz kalacak. Hazırlığına yardımcı olduysa, sitenin gelişimine bir kahve ya da çikolatayla destek olabilirsin.')}</p>
   ${coffeeBtn()}</div></div></section>`}
@@ -740,9 +745,19 @@ function loginBox(){return `<div class="quiz"><h2>${tx('Belépés e-maillel','Si
   <p style="color:var(--muted);margin:6px 0 12px">${tx('Jelszó nincs: küldünk egy belépő linket.','No password: we send you a sign-in link.','Şifre yok: sana bir giriş linki gönderiyoruz.')}</p>
   <label class="sr" for="liEmail">E-mail</label><input class="search" id="liEmail" type="email" autocomplete="email" placeholder="nev@pelda.hu" style="margin:0 0 12px">
   <button class="btn primary" id="liBtn">${tx('Belépő link küldése','Send sign-in link','Giriş linki gönder')}</button><p id="liMsg" style="color:var(--muted);font-size:15px;margin:10px 0 0"></p></div>`}
-function buyBox(){if(WAITING)return `<div class="tip" style="margin-top:14px">${tx('Fizetés ellenőrzése… Ez általában néhány másodperc.','Confirming your payment… This usually takes a few seconds.','Ödemen doğrulanıyor… Bu genelde birkaç saniye sürer.')}</div>`;return `<button class="btn primary" id="buyBtn" style="margin-top:12px">${tx('Megveszem','Buy full access','Tam erişimi satın al')} – ${SHOP.price}</button>
-  <button class="btn" id="recheck" style="margin-top:12px">${tx('Már fizettem – ellenőrzés','I’ve paid – check again','Ödedim – tekrar kontrol et')}</button>
-  <p id="buyMsg" style="color:var(--muted);font-size:15px;margin:10px 0 0">${IC('lock')} ${tx('A fizetés a Lemon Squeezy biztonságos oldalán történik – a kártyaadataid soha nem jutnak el hozzánk. A címet csak a hivatalos számla miatt kérik. A „Save my information” rész nem kötelező. Fizetés után a fiókod pár másodpercen belül teljes hozzáférést kap.','Payment happens on Lemon Squeezy’s secure page – your card details never reach us. The address is only needed for the legal invoice. The “Save my information” part is optional. After payment your account gets full access within seconds.','Ödeme Lemon Squeezy’nin güvenli sayfasında yapılır – kart bilgilerin bize hiç ulaşmaz. Adres sadece yasal fatura için isteniyor. “Save my information” kısmı zorunlu değil. Ödemeden birkaç saniye sonra hesabın tam erişim kazanır.')}</p>`}
+const payRecent=()=>{const t=S.get('payPending',0);return t&&Date.now()-t<2*3600e3};
+function checkoutUrl(){const q=['checkout[billing_address][country]=HU'];
+  if(USER){q.push('checkout[email]='+encodeURIComponent(USER.email||''),'checkout[custom][user_id]='+encodeURIComponent(USER.id))}
+  return SHOP.checkout+(SHOP.checkout.includes('?')?'&':'?')+q.join('&')}
+function buyNow(){if(!shopReady())return false;S.set('payPending',Date.now());location.href=checkoutUrl();return true}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(!b)return;e.preventDefault();if(!buyNow()){const m=$('buyMsg');if(m)m.textContent=tx('A fizetés még nem aktív.','Payments are not active yet.','Ödeme henüz aktif değil.')}});
+function steps(){return `<ol class="buysteps"><li><b>${tx('Fizess','Pay','Öde')}</b> – ${tx('a biztonságos Lemon Squeezy oldalon (kártya, Google Pay).','on the secure Lemon Squeezy page (card, Google Pay).','güvenli Lemon Squeezy sayfasında (kart, Google Pay).')}</li>
+  <li><b>${tx('Gyere vissza','Come back','Siteye dön')}</b> – ${tx('fizetés után a gomb visszahoz ide.','after paying, the button brings you back here.','ödemeden sonra buton seni buraya getirir.')}</li>
+  <li><b>${tx('Lépj be ugyanazzal az e-maillel','Sign in with the same e-mail','Aynı e-postayla giriş yap')}</b> – ${tx('kapsz egy linket, rákattintasz, és kész: minden feloldva.','you get a link, click it, done: everything unlocked.','gelen linke tıkla, hepsi bu: her şey açılır.')}</li></ol>`}
+function buyBox(){if(WAITING)return `<div class="tip" style="margin-top:14px">${tx('Fizetés ellenőrzése… Ez általában néhány másodperc.','Confirming your payment… This usually takes a few seconds.','Ödemen doğrulanıyor… Bu genelde birkaç saniye sürer.')}</div>`;
+  return `<button class="btn primary buybig" data-buy>${tx('Megveszem','Buy full access','Tam erişimi satın al')} – ${SHOP.price}</button>
+  <p id="buyMsg" class="fine">${IC('lock')} ${tx('Biztonságos fizetés a Lemon Squeezy oldalán – a kártyaadataid nem jutnak el hozzánk. A címet csak a számla miatt kérik.','Secure payment on Lemon Squeezy – your card details never reach us. The address is only needed for the invoice.','Güvenli ödeme Lemon Squeezy’de – kart bilgilerin bize ulaşmaz. Adres sadece fatura için isteniyor.')}</p>
+  ${USER?`<button class="btn sm" id="recheck" style="margin-top:6px">${tx('Már fizettem – ellenőrzés','I’ve paid – check again','Ödedim – tekrar kontrol et')}</button>`:''}`}
 function incList(){return [tx('Mind a 6 lecke, ábrákkal és idővonallal','All 6 lessons, with illustrations and a timeline','6 dersin tamamı, görseller ve zaman çizelgesiyle'),tx(`Mind a ${META.total} kérdés gyakorlása (${META.reported} vizsgán szerepelt)`,`Practice with all ${META.total} questions (${META.reported} reported from real exams)`,`${META.total} sorunun hepsiyle sınırsız alıştırma (${META.reported}’si sınavda çıkmış)`),tx('Próbavizsga az igazi formátumban, írásbeli kérdésekkel','Mock exam in the real format, with written questions','Gerçek formatta, yazılı sorulu deneme sınavı'),tx('Teljes szókincs, keresés, és a haladásod minden eszközön','Full vocabulary, search, and your progress on every device','Tüm kelimeler, arama ve her cihazda kayıtlı ilerleme')]}
 function pUnlock(from){setTimeout(acctWire);
   if(paid())return `<div class="wrap narrow">${crumb(t('unlock'))}<div class="ph"><h1>${t('unlock')}</h1><p class="sub">${tx('A teljes hozzáférés aktív.','Full access is active.','Tam erişimin açık.')}</p></div><div class="row"><a class="btn primary" href="#l2">${tx('Tovább a 2. leckéhez','Go to lesson 2','2. derse geç')}</a><a class="btn" href="#mock">${t('mock')}</a></div></div>`;
@@ -750,13 +765,13 @@ function pUnlock(from){setTimeout(acctWire);
   return `<div class="wrap narrow">${crumb(t('unlock'))}<div class="ph"><h1>${t('unlock')}</h1><p class="sub">${why}</p></div>
   <div class="quiz" style="margin-bottom:16px"><h2>${tx('Mit kapsz?','What you get','Neler dahil?')}</h2><ul style="padding-left:20px;margin:10px 0 16px">${incList().map(i=>`<li style="margin:4px 0">${i}</li>`).join('')}</ul>
    <div class="row" style="align-items:baseline;gap:14px"><span class="score" style="font-size:32px">${SHOP.price}</span><span style="color:var(--muted)">${tx('egyszeri díj, előfizetés nélkül','one-time, no subscription','tek seferlik, abonelik yok')}</span></div>
-   ${AUTHBUSY?`<p style="color:var(--muted)">…</p>`:USER?buyBox():`<p style="margin:14px 0 0"><b>${tx('1. lépés: lépj be, hogy a vásárlás a fiókodhoz kerüljön.','Step 1: sign in so the purchase is linked to your account.','1. adım: satın alma hesabına bağlansın diye önce giriş yap.')}</b></p>`}</div>
-  ${!AUTHBUSY&&!USER?loginBox():''}</div>`}
+   ${buyBox()}${USER?'':steps()}</div>
+  ${!AUTHBUSY&&!USER?`<h2 class="sh" style="font-size:18px;margin:22px 0 10px">${tx('Már fizettél? Lépj be:','Already paid? Sign in:','Zaten ödedin mi? Giriş yap:')}</h2>`+loginBox():''}</div>`}
 function pAccount(){setTimeout(acctWire);
   const head=`<div class="wrap narrow">${crumb(t('account'))}<div class="ph"><h1>${t('account')}</h1></div>`;
   if(!sb)return head+`<div class="tip">${tx('A fiókrendszer most nem érhető el. Próbáld később.','The account system is not available right now. Please try later.','Hesap sistemine şu an ulaşılamıyor. Daha sonra tekrar dene.')}</div></div>`;
   if(AUTHBUSY)return head+`<p style="color:var(--muted)">…</p></div>`;
-  if(!USER)return head+loginBox()+`</div>`;
+  if(!USER)return head+(payRecent()?`<div class="paidnote"><b>${tx('Köszönjük, a fizetés megérkezett!','Thank you, your payment went through!','Teşekkürler, ödemen alındı!')}</b><br>${tx('Most írd be azt az e-mail címet, amellyel fizettél. Küldünk egy linket – rákattintasz, és a teljes hozzáférés aktív.','Now enter the e-mail address you paid with. We send you a link – click it and full access is active.','Şimdi ödeme yaptığın e-posta adresini yaz. Sana bir link göndereceğiz – tıkla, tam erişimin açılsın.')}</div>`:'')+loginBox()+`</div>`;
   return head+`<div class="quiz"><p style="margin:0;color:var(--muted)">${tx('Bejelentkezve','Signed in as','Giriş yapan')}</p><p style="margin:2px 0 14px;font-weight:700;word-break:break-all">${esc(USER.email||'')}</p>
    <p style="margin:0 0 6px">${paid()?`<span class="verdict pass">${IC('star')} ${tx('Teljes hozzáférés','Full access','Tam erişim')}</span>`:`<span class="verdict fail">${tx('Ingyenes fiók','Free account','Ücretsiz hesap')}</span>`}</p>
    ${paid()?`<p style="color:var(--muted)">${tx('A haladásod a fiókodban mentődik, minden eszközön elérhető.','Your progress is saved to your account and available on every device.','İlerlemen hesabına kaydediliyor, her cihazda görünür.')}</p>`:buyBox()}
@@ -766,8 +781,7 @@ function acctWire(){
     li.disabled=true;$('liMsg').textContent='…';
     const {error}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname}});
     li.disabled=false;$('liMsg').innerHTML=error?esc(tx('Nem sikerült elküldeni. Próbáld újra pár perc múlva.','Could not send. Please try again in a few minutes.','Gönderilemedi. Birkaç dakika sonra tekrar dene.')):IC('mail')+' '+tx('Elküldtük! Nyisd meg a levelet <b>ebben a böngészőben</b>, és kattints a linkre. (Nézd meg a spam mappát is.)','Sent! Open the e-mail <b>in this browser</b> and click the link. (Check spam too.)','Gönderildi! E-postayı <b>bu tarayıcıda</b> açıp linke tıkla. (Spam klasörüne de bak.)')};
-  const b=$('buyBtn');if(b)b.onclick=()=>{if(!shopReady()){$('buyMsg').textContent=tx('A fizetés még nem aktív.','Payments are not active yet.','Ödeme henüz aktif değil.');return}
-    S.set('payPending',Date.now());location.href=SHOP.checkout+(SHOP.checkout.includes('?')?'&':'?')+'checkout[email]='+encodeURIComponent(USER.email||'')+'&checkout[custom][user_id]='+encodeURIComponent(USER.id)+'&checkout[billing_address][country]=HU'};
+
   const rc=$('recheck');if(rc)rc.onclick=async()=>{rc.disabled=true;await loadAccount();chrome();route(true)};
   const lo=$('logout');if(lo)lo.onclick=async()=>{await sb.auth.signOut();USER=null;PREMIUM=false;location.reload()}}
 

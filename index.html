@@ -25,6 +25,7 @@
 
 
 
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -723,16 +724,23 @@ async function loadAccount(){if(!sb){AUTHBUSY=false;return}
     if(USER){const {data}=await sb.from('profiles').select('premium').eq('id',USER.id).maybeSingle();PREMIUM=!!(data&&data.premium);
       if(PREMIUM&&!PLOADED)await loadPremium();await pullProgress()}}catch(e){}
   AUTHBUSY=false}
+let WAITING=false;
+async function waitForPremium(){ // after checkout: re-check every 3 s for up to 90 s
+  const t0=S.get('payPending',0);if(!USER||paid()||!t0||Date.now()-t0>2*3600e3)return;
+  WAITING=true;chrome();route(true);
+  for(let i=0;i<30&&!paid();i++){await new Promise(r=>setTimeout(r,3000));await loadAccount()}
+  WAITING=false;if(paid())_set('payPending',0);
+  if(paid()){location.hash='#account'}chrome();route(true)}
 async function initAuth(){
   if(sb)sb.auth.onAuthStateChange(ev=>{if(ev==='SIGNED_IN'||ev==='SIGNED_OUT')setTimeout(async()=>{await loadAccount();chrome();route(true)},0)});
   await loadAccount();
   if(new URLSearchParams(location.search).has('code'))history.replaceState(null,'',location.pathname+'#account');
-  chrome();route(true)}
+  chrome();route(true);waitForPremium()}
 function loginBox(){return `<div class="quiz"><h2>${tx('Belépés e-maillel','Sign in with e-mail','E-postayla giriş')}</h2>
   <p style="color:var(--muted);margin:6px 0 12px">${tx('Jelszó nincs: küldünk egy belépő linket.','No password: we send you a sign-in link.','Şifre yok: sana bir giriş linki gönderiyoruz.')}</p>
   <label class="sr" for="liEmail">E-mail</label><input class="search" id="liEmail" type="email" autocomplete="email" placeholder="nev@pelda.hu" style="margin:0 0 12px">
   <button class="btn primary" id="liBtn">${tx('Belépő link küldése','Send sign-in link','Giriş linki gönder')}</button><p id="liMsg" style="color:var(--muted);font-size:15px;margin:10px 0 0"></p></div>`}
-function buyBox(){return `<button class="btn primary" id="buyBtn" style="margin-top:12px">${tx('Megveszem','Buy full access','Tam erişimi satın al')} – ${SHOP.price}</button>
+function buyBox(){if(WAITING)return `<div class="tip" style="margin-top:14px">${tx('Fizetés ellenőrzése… Ez általában néhány másodperc.','Confirming your payment… This usually takes a few seconds.','Ödemen doğrulanıyor… Bu genelde birkaç saniye sürer.')}</div>`;return `<button class="btn primary" id="buyBtn" style="margin-top:12px">${tx('Megveszem','Buy full access','Tam erişimi satın al')} – ${SHOP.price}</button>
   <button class="btn" id="recheck" style="margin-top:12px">${tx('Már fizettem – ellenőrzés','I’ve paid – check again','Ödedim – tekrar kontrol et')}</button>
   <p id="buyMsg" style="color:var(--muted);font-size:15px;margin:10px 0 0">${IC('lock')} ${tx('A fizetés a Lemon Squeezy biztonságos oldalán történik – a kártyaadataid soha nem jutnak el hozzánk. A címet csak a hivatalos számla miatt kérik. A „Save my information” rész nem kötelező. Fizetés után a fiókod pár másodpercen belül teljes hozzáférést kap.','Payment happens on Lemon Squeezy’s secure page – your card details never reach us. The address is only needed for the legal invoice. The “Save my information” part is optional. After payment your account gets full access within seconds.','Ödeme Lemon Squeezy’nin güvenli sayfasında yapılır – kart bilgilerin bize hiç ulaşmaz. Adres sadece yasal fatura için isteniyor. “Save my information” kısmı zorunlu değil. Ödemeden birkaç saniye sonra hesabın tam erişim kazanır.')}</p>`}
 function incList(){return [tx('Mind a 6 lecke, ábrákkal és idővonallal','All 6 lessons, with illustrations and a timeline','6 dersin tamamı, görseller ve zaman çizelgesiyle'),tx(`Mind a ${META.total} kérdés gyakorlása (${META.reported} vizsgán szerepelt)`,`Practice with all ${META.total} questions (${META.reported} reported from real exams)`,`${META.total} sorunun hepsiyle sınırsız alıştırma (${META.reported}’si sınavda çıkmış)`),tx('Próbavizsga az igazi formátumban, írásbeli kérdésekkel','Mock exam in the real format, with written questions','Gerçek formatta, yazılı sorulu deneme sınavı'),tx('Teljes szókincs, keresés, és a haladásod minden eszközön','Full vocabulary, search, and your progress on every device','Tüm kelimeler, arama ve her cihazda kayıtlı ilerleme')]}
@@ -759,7 +767,7 @@ function acctWire(){
     const {error}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname}});
     li.disabled=false;$('liMsg').innerHTML=error?esc(tx('Nem sikerült elküldeni. Próbáld újra pár perc múlva.','Could not send. Please try again in a few minutes.','Gönderilemedi. Birkaç dakika sonra tekrar dene.')):IC('mail')+' '+tx('Elküldtük! Nyisd meg a levelet <b>ebben a böngészőben</b>, és kattints a linkre. (Nézd meg a spam mappát is.)','Sent! Open the e-mail <b>in this browser</b> and click the link. (Check spam too.)','Gönderildi! E-postayı <b>bu tarayıcıda</b> açıp linke tıkla. (Spam klasörüne de bak.)')};
   const b=$('buyBtn');if(b)b.onclick=()=>{if(!shopReady()){$('buyMsg').textContent=tx('A fizetés még nem aktív.','Payments are not active yet.','Ödeme henüz aktif değil.');return}
-    location.href=SHOP.checkout+(SHOP.checkout.includes('?')?'&':'?')+'checkout[email]='+encodeURIComponent(USER.email||'')+'&checkout[custom][user_id]='+encodeURIComponent(USER.id)+'&checkout[billing_address][country]=HU'};
+    S.set('payPending',Date.now());location.href=SHOP.checkout+(SHOP.checkout.includes('?')?'&':'?')+'checkout[email]='+encodeURIComponent(USER.email||'')+'&checkout[custom][user_id]='+encodeURIComponent(USER.id)+'&checkout[billing_address][country]=HU'};
   const rc=$('recheck');if(rc)rc.onclick=async()=>{rc.disabled=true;await loadAccount();chrome();route(true)};
   const lo=$('logout');if(lo)lo.onclick=async()=>{await sb.auth.signOut();USER=null;PREMIUM=false;location.reload()}}
 

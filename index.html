@@ -12,6 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='11' fill='%23c8102e'/%3E%3Crect y='11' width='32' height='10' fill='%23fff'/%3E%3Crect y='21' width='32' height='11' fill='%232e6b45'/%3E%3C/svg%3E">
 
 
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -217,6 +218,10 @@ footer a{color:var(--muted)}
 .tline li::before{content:"";position:absolute;left:-26px;top:13px;width:13px;height:13px;border-radius:50%;background:#fff;border:3px solid #2e6b45}
 .tline b{font-family:var(--display)}.tline small{display:block;font-size:13px}
 .hu-mode .fig .en{display:none!important}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+.mbox{background:var(--bg);color:var(--ink);border-radius:20px;padding:22px;max-width:420px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.mbox h3{margin:0 0 8px;font-size:21px}.mbox p{margin:0 0 18px;color:var(--muted)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -985,9 +990,17 @@ function mockPaper(){clearInterval(timer);
   const upd=()=>{$('mans').textContent=`${answered()}/12 ${tx('megválaszolva','answered','cevaplandı')}`;saveM()};
   $('mq').querySelectorAll('input[type=radio]').forEach(r=>r.onchange=()=>{const k=+r.dataset.k;M.items[k].ans=r.value;r.closest('.opts').querySelectorAll('.opt').forEach(l=>l.classList.toggle('sel',l.contains(r)));upd()});
   $('mq').querySelectorAll('input.wr').forEach(i=>i.oninput=()=>{M.items[+i.dataset.k].ans=i.value;upd()});
-  $('msub').onclick=()=>mockSubmit(false);$('mquit').onclick=()=>{if(confirm(tx('Biztosan kilépsz? A válaszaid elvesznek.','Quit? Your answers will be lost.','Çıkmak istediğine emin misin? Cevapların silinecek.'))){M=null;saveM();mockIntro()}};
+  $('msub').onclick=()=>mockSubmit(false);$('mquit').onclick=()=>askBox(tx('Kilépsz?','Quit the exam?','Sınavdan çıkmak istiyor musun?'),tx('A válaszaid elvesznek.','Your answers will be lost.','Cevapların silinecek.'),tx('Kilépek','Quit','Çık'),tx('Folytatom','Keep going','Devam et'),()=>{M=null;saveM();mockIntro()},true);
   tick();timer=setInterval(tick,1000)}
-function mockSubmit(auto){const left=12-answered();if(!auto&&left&&!confirm(tx(`${left} kérdés megválaszolatlan. Beadod így is?`,`${left} questions are unanswered. Submit anyway?`,`${left} soru cevapsız. Yine de teslim edilsin mi?`)))return;
+function askBox(title,msg,okL,cancelL,onOk,danger){const d=document.createElement('div');d.className='modal';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+  d.innerHTML=`<div class="mbox"><h3>${title}</h3><p>${msg}</p><div class="row" style="justify-content:flex-end"><button class="btn sm" data-a="no">${cancelL}</button><button class="btn primary sm${danger?' danger':''}" data-a="ok">${okL}</button></div></div>`;
+  document.body.appendChild(d);const close=()=>{d.remove();document.removeEventListener('keydown',esc)};const esc=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',esc);
+  d.onclick=e=>{if(e.target===d)close()};d.querySelector('[data-a=no]').onclick=close;d.querySelector('[data-a=ok]').onclick=()=>{close();onOk()};d.querySelector('[data-a=no]').focus()}
+function mockSubmit(auto){if(!auto){const left=12-answered();
+    const msg=left?tx(`<b>${left} kérdés</b> még megválaszolatlan. Az üres kérdések 0 pontot érnek.`,`<b>${left} questions</b> are still unanswered. Blank questions score 0 points.`,`<b>${left} soru</b> hâlâ boş. Boş sorular 0 puan alır.`):tx('Minden kérdésre válaszoltál. Beadás után már nem módosíthatsz.','You answered every question. After submitting you can’t change your answers.','Tüm soruları cevapladın. Teslim ettikten sonra cevaplarını değiştiremezsin.');
+    askBox(tx('Beadod a vizsgát?','Submit the exam?','Sınavı teslim etmek istiyor musun?'),msg,tx('Beadom','Submit','Teslim et'),tx('Folytatom','Keep going','Devam et'),()=>finishMock());return}
+  finishMock()}
+function finishMock(){
   clearInterval(timer);M.done=true;M.items.forEach(x=>{const q=Q[x.id];x.got=x.type==='mc'?(x.ans===mcAns(q)?2:0):gradeWr(q,x.ans);if(x.type==='mc'){if(x.got)misses[x.id]&&misses[x.id]--;else misses[x.id]=(misses[x.id]||0)+1}});S.set('miss',misses);saveM();mockResults();window.scrollTo(0,0)}
 function mockTotal(){return M.items.reduce((a,x,k)=>a+(M.over[k]!=null?M.over[k]:x.got),0)}
 function mockResults(){clearInterval(timer);const tot=mockTotal(),ok=tot>=16,best=Math.max(S.get('best30',0),tot);S.set('best30',best);

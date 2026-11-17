@@ -27,6 +27,7 @@
 
 
 
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -449,7 +450,7 @@ function chrome(){
   $('nav').innerHTML=(paid()?NAV:[...NAV,'unlock']).map(k=>`<a href="#${k}" data-k="${k}">${t(k)}</a>`).join('');
   $('sheet').innerHTML=['home',...NAV,'search','feedback','account',...(paid()?[]:['unlock'])].map(k=>`<a href="#${k}">${t(k)}</a>`).join('');
   $('searchBtn').setAttribute('aria-label',t('search'));const ab=$('accBtn');if(ab){ab.setAttribute('aria-label',t('account'));ab.innerHTML=IC(USER&&paid()?'star':'user');ab.classList.toggle('on',!!USER)}
-  $('foot').innerHTML=`<div><b style="color:var(--ink);font-family:var(--display)">Vizsgafüzet</b><p style="margin:6px 0 0;max-width:30em">${t('footAbout')}</p><div style="margin-top:12px">${coffeeBtn('sm')}</div></div><div><h4>${t('content')}</h4><ul>${['lessons','vocab','practice','mock'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div><div><h4>${t('more')}</h4><ul>${['questions','exam','search','feedback'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div>`;
+  $('foot').innerHTML=`<div><b style="color:var(--ink);font-family:var(--display)">Vizsgafüzet</b><p style="margin:6px 0 0;max-width:30em">${t('footAbout')}</p><div id="footCoffee" style="margin-top:12px">${coffeeBtn('sm')}</div></div><div><h4>${t('content')}</h4><ul>${['lessons','vocab','practice','mock'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div><div><h4>${t('more')}</h4><ul>${['questions','exam','search','feedback'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div>`;
 }
 document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{L=b.dataset.lang;S.set('lang',L);chrome();route(true)});
 $('menuBtn').onclick=()=>{const o=$('sheet').classList.toggle('open');$('menuBtn').setAttribute('aria-expanded',o)};
@@ -688,6 +689,7 @@ function route(keep){const h=(location.hash||'#home').slice(1);let v=h,html;
   app.innerHTML=html;document.querySelectorAll('nav.main a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.k===v));
   document.title=(v==='home'?'':t(v)+' – ')+'Vizsgafüzet';
   const hb=$('howBtn');if(hb)hb.onclick=()=>$('how').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  const fc=$('footCoffee');if(fc)fc.hidden=paid()||v==='unlock';
   if(!keep)window.scrollTo(0,0);lastView=h;}
 /* ---------- account + premium (Supabase + Lemon Squeezy) ---------- */
 const SB_URL='https://sbgvqkfjpazawtmruiqy.supabase.co',SB_KEY='sb_publishable_PSGxKUhcFxcWF3CoDgkaBA_wQKqW0kX';
@@ -696,7 +698,7 @@ const FEEDBACK={email:'CHANGE-ME@example.com',endpoint:''};
 const COFFEE='https://buymeacoffee.com/CHANGE-ME';   // Buy Me a Coffee page (voluntary support)
 const coffeeReady=()=>!/CHANGE-ME/.test(COFFEE);
 function coffeeBtn(cls){return `<button type="button" class="btn bmc ${cls||''}" data-buy>${IC('cup')} ${tx('Hívj meg egy kávéra vagy csokira','Buy me a coffee or a chocolate','Bana bir kahve ya da çikolata ısmarla')} · ${SHOP.price}</button>`}
-function coffeeBox(){return `<section><div class="coffee"><div class="cups"><div class="cup">${IC('cup')}</div><div class="cup choc">${IC('choco')}</div></div><div><h2 class="sh" style="font-size:20px">${tx('Hasznos volt?','Found it useful?','Faydalı buldun mu?')}</h2>
+function coffeeBox(){if(paid())return '';return `<section><div class="coffee"><div class="cups"><div class="cup">${IC('cup')}</div><div class="cup choc">${IC('choco')}</div></div><div><h2 class="sh" style="font-size:20px">${tx('Hasznos volt?','Found it useful?','Faydalı buldun mu?')}</h2>
   <p class="ss" style="margin:0 0 14px">${tx('Az ingyenes rész mindenkinek ingyenes marad. Ha segített a felkészülésben, egy kávéval vagy egy csokival támogathatod az oldal fejlesztését.','The free part stays free for everyone. If it helped you prepare, you can support the site with a coffee or a chocolate.','Ücretsiz bölüm herkes için ücretsiz kalacak. Hazırlığına yardımcı olduysa, sitenin gelişimine bir kahve ya da çikolatayla destek olabilirsin.')}</p>
   ${coffeeBtn()}</div></div></section>`}
 const shopReady=()=>!/CHANGE-ME/.test(SHOP.checkout);

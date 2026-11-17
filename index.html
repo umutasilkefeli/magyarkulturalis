@@ -28,6 +28,10 @@
 
 
 
+
+
+
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -237,12 +241,9 @@ footer a{color:var(--muted)}
 .mbox{background:var(--bg);color:var(--ink);border-radius:14px;padding:22px;max-width:420px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .mbox h3{margin:0 0 8px;font-size:21px}.mbox p{margin:0 0 18px;color:var(--muted)}
 .btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
-.btn.bmc{background:#ffdd00;color:#1d1d1b;border-color:#ffdd00}
 .fl{display:block;font-weight:700;font-size:15px;margin:0 0 8px}
 textarea.search{resize:vertical;font:inherit;min-height:120px}
-.coffee{display:flex;gap:20px;align-items:flex-start;background:#fff8d6;border:1px solid #f3e29a;border-radius:14px;padding:24px;color:#1d1d1b}
-.coffee .ss{color:#5f5e58}.coffee .cup{font-size:34px;line-height:1}.coffee .cups{display:flex;flex-direction:column;gap:6px;flex:none}@media (max-width:520px){.coffee .cups{flex-direction:row}}
-@media (max-width:520px){.coffee{flex-direction:column;gap:8px}}
+
 svg.i{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}.ib .i{width:19px;height:19px}.lk{width:.9em;height:.9em;opacity:.7}.chip .i,.opt .i{margin-right:2px}.tag .i,.qnote .i{width:1em;height:1em}
 nav.main a[data-k="unlock"]{color:var(--green);font-weight:600}
 .e{font-style:normal;line-height:1}.lk{font-size:.85em;opacity:.8}
@@ -250,6 +251,13 @@ nav.main a[data-k="unlock"]{color:var(--green);font-weight:600}
 .fine{color:var(--muted);font-size:13.5px;margin:10px 0 0}
 .buysteps{margin:16px 0 0;padding-left:20px;font-size:14.5px;color:var(--muted)}.buysteps li{margin:6px 0}.buysteps b{color:var(--ink)}
 .paidnote{background:var(--okbg);border-radius:12px;padding:14px 16px;margin:0 0 14px}
+.fullbox{display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--surface)}
+.eyebrow{margin:0 0 4px;font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+.fulllist{margin:0;padding-left:18px;color:var(--muted);font-size:14.5px}.fulllist li{margin:4px 0}
+.fullbuy{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.fullbuy .price{font-family:var(--display);font-weight:700;font-size:30px;line-height:1}.fullbuy .per{color:var(--muted);font-size:13.5px;margin-bottom:6px}
+.fullbuy .more{font-size:14px;color:var(--muted)}
+@media (max-width:640px){.fullbox{grid-template-columns:1fr}.fullbuy{text-align:left;align-items:flex-start}.fullbuy .btn{width:100%}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -450,7 +458,7 @@ function chrome(){
   $('nav').innerHTML=(paid()?NAV:[...NAV,'unlock']).map(k=>`<a href="#${k}" data-k="${k}">${t(k)}</a>`).join('');
   $('sheet').innerHTML=['home',...NAV,'search','feedback','account',...(paid()?[]:['unlock'])].map(k=>`<a href="#${k}">${t(k)}</a>`).join('');
   $('searchBtn').setAttribute('aria-label',t('search'));const ab=$('accBtn');if(ab){ab.setAttribute('aria-label',t('account'));ab.innerHTML=IC(USER&&paid()?'star':'user');ab.classList.toggle('on',!!USER)}
-  $('foot').innerHTML=`<div><b style="color:var(--ink);font-family:var(--display)">Vizsgafüzet</b><p style="margin:6px 0 0;max-width:30em">${t('footAbout')}</p><div id="footCoffee" style="margin-top:12px">${coffeeBtn('sm')}</div></div><div><h4>${t('content')}</h4><ul>${['lessons','vocab','practice','mock'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div><div><h4>${t('more')}</h4><ul>${['questions','exam','search','feedback'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div>`;
+  $('foot').innerHTML=`<div><b style="color:var(--ink);font-family:var(--display)">Vizsgafüzet</b><p style="margin:6px 0 0;max-width:30em">${t('footAbout')}</p></div><div><h4>${t('content')}</h4><ul>${['lessons','vocab','practice','mock'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div><div><h4>${t('more')}</h4><ul>${['questions','exam','search','feedback'].map(k=>`<li><a href="#${k}">${t(k)}</a></li>`).join('')}</ul></div>`;
 }
 document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{L=b.dataset.lang;S.set('lang',L);chrome();route(true)});
 $('menuBtn').onclick=()=>{const o=$('sheet').classList.toggle('open');$('menuBtn').setAttribute('aria-expanded',o)};
@@ -510,7 +518,7 @@ function pHome(){const last=S.get('lastLesson',null);
   <div class="glance">${[[12,0],[60,1],[30,2],[16,3]].map(([n,i])=>`<div><b>${n}</b><span>${t('glance')[i]}</span></div>`).join('')}</div>
   <section id="how"><h2 class="sh">${t('howH')}</h2><p class="ss">${t('howS')}</p><ol class="steps">${t('steps').map((s,i)=>`<li><h3>${s[0]}</h3><p>${s[1]}</p><a href="#${['lessons','vocab','practice','mock'][i]}">${s[2]}</a></li>`).join('')}</ol></section>
   <section><h2 class="sh">${t('chH')}</h2><p class="ss">${t('chS')}</p>${last?`<div class="continue"><span><b>${t('cont')}</b><br><span style="color:var(--muted)">${CH[last-1].ic} ${esc(CH[last-1].hu)}</span></span><a class="btn primary sm" href="#l${last}">${t('contBtn')}</a></div>`:''}${chList()}</section>
-  ${coffeeBox()}<section><h2 class="sh">${t('resH')}</h2><p class="ss">${t('resS')}</p>${resources()}</section></div>`}
+  ${fullBox()}<section><h2 class="sh">${t('resH')}</h2><p class="ss">${t('resS')}</p>${resources()}</section></div>`}
 function resources(){return `<div class="res"><a href="https://oif.gov.hu/tajekoztatok/magyar-kulturalis-ismereti-vizsga" target="_blank" rel="noopener"><b>OIF</b><span>${tx('Hivatalos tájékoztató és segédanyag','Official information sheet and study booklet','Resmi bilgilendirme ve çalışma kitapçığı')}</span></a><a href="https://viahungary.com/downloads" target="_blank" rel="noopener"><b>viaHungary</b><span>${tx('Letölthető tájékoztatók (HU/EN)','Downloadable guides (HU/EN)','İndirilebilir rehberler (HU/EN)')}</span></a></div>`}
 function pLessons(){return `<div class="wrap">${crumb(t('lessons'))}<div class="ph"><h1>${t('lessons')}</h1><p class="sub">${t('chS')}</p></div>${chList()}</div>`}
 let lessonTab=0;
@@ -689,18 +697,16 @@ function route(keep){const h=(location.hash||'#home').slice(1);let v=h,html;
   app.innerHTML=html;document.querySelectorAll('nav.main a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.k===v));
   document.title=(v==='home'?'':t(v)+' – ')+'Vizsgafüzet';
   const hb=$('howBtn');if(hb)hb.onclick=()=>$('how').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-  const fc=$('footCoffee');if(fc)fc.hidden=paid()||v==='unlock';
   if(!keep)window.scrollTo(0,0);lastView=h;}
 /* ---------- account + premium (Supabase + Lemon Squeezy) ---------- */
 const SB_URL='https://sbgvqkfjpazawtmruiqy.supabase.co',SB_KEY='sb_publishable_PSGxKUhcFxcWF3CoDgkaBA_wQKqW0kX';
-const SHOP={checkout:'https://magyarkulturalis.lemonsqueezy.com/checkout/buy/3ca312a3-95fe-47a2-ae24-4fadd57db673',price:'2800 Ft'};
+const SHOP={checkout:'https://magyarkulturalis.lemonsqueezy.com/checkout/buy/3ca312a3-95fe-47a2-ae24-4fadd57db673',price:'2000 Ft'};
 const FEEDBACK={email:'CHANGE-ME@example.com',endpoint:''};
-const COFFEE='https://buymeacoffee.com/CHANGE-ME';   // Buy Me a Coffee page (voluntary support)
-const coffeeReady=()=>!/CHANGE-ME/.test(COFFEE);
-function coffeeBtn(cls){return `<button type="button" class="btn bmc ${cls||''}" data-buy>${IC('cup')} ${tx('Hívj meg egy kávéra vagy csokira','Buy me a coffee or a chocolate','Bana bir kahve ya da çikolata ısmarla')} · ${SHOP.price}</button>`}
-function coffeeBox(){if(paid())return '';return `<section><div class="coffee"><div class="cups"><div class="cup">${IC('cup')}</div><div class="cup choc">${IC('choco')}</div></div><div><h2 class="sh" style="font-size:20px">${tx('Hasznos volt?','Found it useful?','Faydalı buldun mu?')}</h2>
-  <p class="ss" style="margin:0 0 14px">${tx('Az ingyenes rész mindenkinek ingyenes marad. Ha segített a felkészülésben, egy kávéval vagy egy csokival támogathatod az oldal fejlesztését.','The free part stays free for everyone. If it helped you prepare, you can support the site with a coffee or a chocolate.','Ücretsiz bölüm herkes için ücretsiz kalacak. Hazırlığına yardımcı olduysa, sitenin gelişimine bir kahve ya da çikolatayla destek olabilirsin.')}</p>
-  ${coffeeBtn()}</div></div></section>`}
+function fullBox(){if(paid())return '';return `<section><div class="fullbox"><div>
+  <p class="eyebrow">${t('unlock')}</p><h2 class="sh" style="margin-bottom:8px">${tx('Készülj fel mindenre egy helyen','Prepare for everything in one place','Sınava tek yerden, eksiksiz hazırlan')}</h2>
+  <ul class="fulllist">${incList().map(i=>`<li>${i}</li>`).join('')}</ul></div>
+  <div class="fullbuy"><div class="price">${SHOP.price}</div><div class="per">${tx('egyszeri díj','one-time','tek seferlik')}</div>
+  <button class="btn primary" data-buy>${tx('Megveszem','Buy full access','Tam erişimi satın al')}</button><a class="more" href="#unlock">${tx('Részletek','Details','Detaylar')}</a></div></div></section>`}
 const shopReady=()=>!/CHANGE-ME/.test(SHOP.checkout);
 let sb=null,USER=null,PREMIUM=false,PLOADED=false,AUTHBUSY=true;
 try{if(window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'pkce',persistSession:true,detectSessionInUrl:true,autoRefreshToken:true}})}catch(e){sb=null}
